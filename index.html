@@ -152,6 +152,8 @@ button {
 <div id="itemsList"></div>
 </div>
 
+<input id="photo" type="file" accept="image/*">
+
 <!-- SUBMIT -->
 <div id="submit" class="hidden">
 <h2>Submit Item</h2>
@@ -197,12 +199,29 @@ function show(page) {
 }
 
 function addItem() {
+    const file = photo.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            createItem(e.target.result);
+        };
+
+        reader.readAsDataURL(file);
+    } else {
+        createItem("");
+    }
+}
+
+function createItem(imageData) {
     let item = {
         id: Date.now(),
         title: title.value,
         desc: desc.value,
         type: type.value,
         category: category.value,
+        photo: imageData,
         resolved: false
     };
 
@@ -211,9 +230,10 @@ function addItem() {
 
     title.value = "";
     desc.value = "";
+    photo.value = "";
 
     alert("Item added!");
-    renderItems();
+    show("browse");
 }
 
 function renderItems() {
@@ -229,6 +249,7 @@ function renderItems() {
     filtered.forEach(i => {
         html += `
         <div class="card">
+            ${i.photo ? `<img src="${i.photo}" style="max-width:200px;border-radius:10px;">` : ""}
             <h3>${i.title} (${i.type})</h3>
             <p>${i.desc}</p>
             <p class="small">${i.category}</p>
@@ -265,6 +286,5 @@ function toggleDark() {
 
 renderItems();
 </script>
-
 </body>
 </html>
