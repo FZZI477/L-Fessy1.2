@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lost & Fessy-ound</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #ffffff;
+    color: #222;
+}
+
+header {
+    background: #8B1B40;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 22px;
+    color: white;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+nav button,
+nav a,
+.btn {
+    background: #8B1B40;
+    color: white;
+    border: 2px solid black;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+nav button:hover,
+nav a:hover,
+.btn:hover {
+    background: #751735;
+}
+
+.container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: auto;
+}
+
+.hidden {
+    display: none;
+}
+
+.card {
+    background: #ffffff;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+    cursor: pointer;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.small {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.dark {
+    background: #1e1e1e;
+    color: white;
+}
+
+.dark header h1 {
+    color: black;
+}
+
+.dark .card {
+    background: #2a2a2a;
+}
+
+.dark button,
+.dark .btn,
+.dark nav a {
+    border: 2px solid white;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+    background: black;
+    color: white;
+    border: 2px solid white;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🔍 Lost & Fessyound</h1>
+<nav>
+<a href="https://app.blackbaud.com/signin/?sessionClear=true&redirectUrl=https:%2F%2Ffessenden.myschoolapp.com%2Fapp%2Fstudent%3Fsvcid%3Dedu%26envid%3Dp-NU2iOghPDEqG03zm6kOeLw%23studentmyday%2Fprogress" target="_blank">myFessy</a>
+<a href="https://accounts.google.com/signin" target="_blank">Gmail Sign-in</a>
+<button onclick="show('home')">Home</button>
+<button onclick="show('submit')">Submit</button>
+<button onclick="show('browse')">Browse</button>
+<button onclick="toggleDark()">🌙</button>
+</nav>
+</header>
+
+<div class="container">
+
+<!-- HOME -->
+<div id="home">
+<h2>Welcome</h2>
+<p>Find lost items or report found ones.</p>
+
+<input id="search" placeholder="Search items...">
+<button class="btn" onclick="renderItems()">Search</button>
+
+<div id="itemsList"></div>
+</div>
+
+<!-- SUBMIT -->
+<div id="submit" class="hidden">
+<h2>Submit Item</h2>
+
+<input id="title" placeholder="Item name">
+<textarea id="desc" placeholder="Description"></textarea>
+
+<select id="type">
+<option>Lost</option>
+<option>Found</option>
+</select>
+
+<select id="category">
+<option>Electronics</option>
+<option>Bags</option>
+<option>Keys</option>
+<option>Clothing</option>
+<option>Other</option>
+</select>
+
+<button class="btn" onclick="addItem()">Submit</button>
+</div>
+
+<!-- BROWSE -->
+<div id="browse" class="hidden">
+<h2>All Items</h2>
+<div id="browseList"></div>
+</div>
+
+</div>
+
+<script>
+let items = JSON.parse(localStorage.getItem("items") || "[]");
+
+function save() {
+    localStorage.setItem("items", JSON.stringify(items));
+}
+
+function show(page) {
+    document.querySelectorAll(".container > div").forEach(d => d.classList.add("hidden"));
+    document.getElementById(page).classList.remove("hidden");
+    renderItems();
+}
+
+function addItem() {
+    let item = {
+        id: Date.now(),
+        title: title.value,
+        desc: desc.value,
+        type: type.value,
+        category: category.value,
+        resolved: false
+    };
+
+    items.push(item);
+    save();
+
+    title.value = "";
+    desc.value = "";
+
+    alert("Item added!");
+    renderItems();
+}
+
+function renderItems() {
+    let searchVal = search.value?.toLowerCase() || "";
+
+    let filtered = items.filter(i =>
+        i.title.toLowerCase().includes(searchVal) ||
+        i.desc.toLowerCase().includes(searchVal)
+    );
+
+    let html = "";
+
+    filtered.forEach(i => {
+        html += `
+        <div class="card">
+            <h3>${i.title} (${i.type})</h3>
+            <p>${i.desc}</p>
+            <p class="small">${i.category}</p>
+
+            <button onclick="resolveItem(${i.id})">
+                ${i.resolved ? "Unresolve" : "Resolve"}
+            </button>
+
+            <button onclick="deleteItem(${i.id})">Delete</button>
+        </div>
+        `;
+    });
+
+    itemsList.innerHTML = html;
+    browseList.innerHTML = html;
+}
+
+function resolveItem(id) {
+    let item = items.find(i => i.id === id);
+    item.resolved = !item.resolved;
+    save();
+    renderItems();
+}
+
+function deleteItem(id) {
+    items = items.filter(i => i.id !== id);
+    save();
+    renderItems();
+}
+
+function toggleDark() {
+    document.body.classList.toggle("dark");
+}
+
+renderItems();
+</script>
+
+</body>
+</html>
